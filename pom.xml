@@ -109,6 +109,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -123,6 +124,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.22.0</version>
                 <executions>
                     <execution>
                         <id>integration-test</id>
