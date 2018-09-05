@@ -15,6 +15,7 @@
 
     <modules>
         <module>zipkin</module>
+        <module>config</module>
     </modules>
 
     <licenses>
