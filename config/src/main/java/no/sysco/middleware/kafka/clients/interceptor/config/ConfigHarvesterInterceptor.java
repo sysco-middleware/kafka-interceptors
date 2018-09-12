@@ -23,14 +23,23 @@ import org.apache.kafka.streams.StreamsConfig;
 /**
  * Kafka interceptor for harvesting and storing Producer/Consumer/KafkaStreams user provided configs
  *
- * @author 100tsa
+ * @author SYSCO Middleware
  * @param <K>
  * @param <V>
  */
 public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, V>, ConsumerInterceptor<K, V> {
 
-    private static final String TOPIC_NAME = "__clients";
+    /**
+     * configurable property for this interceptor that may be used to override default target topic
+     */
+    public static final String TOPIC_NAME = "config.harvester.topic";
+
+    private static final String DEFAULT_TOPIC_NAME = "__client_configs";
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private String topicName = DEFAULT_TOPIC_NAME;
+
     //we need to remove interceptors or we are going into endless interception loop
     private static final String[] IGNORED_PROPERTIES = {
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
@@ -51,6 +60,9 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
     public void configure(final Map<String, ?> configs) {
 
         MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+
+        this.checkAndAssignTopicName(configs);
+
         try {
             final Properties props = new Properties();
             configs.forEach((k, v) -> {
@@ -70,23 +82,38 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
             props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
             props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-            Utils.createTopic(TOPIC_NAME, 1, (short) 1, props);
+            Utils.createTopic(this.topicName, 1, (short) 1, props);
             Producer<String, Object> producer = Utils.getProducer(props);
             //we send config not props so we have all original values
             String jsonizedConf = MAPPER.writeValueAsString(configs);
 
-            producer.send(new ProducerRecord<>(TOPIC_NAME, props.getProperty("client.id"), jsonizedConf));
+            producer.send(new ProducerRecord<>(this.topicName, props.getProperty("client.id"), jsonizedConf));
         } catch (JsonProcessingException ex) {
             Logger.getLogger(ConfigHarvesterInterceptor.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex.getMessage(), ex);
         }
 
     }
+
+    /**
+     * check if config contains {@link ConfigHarvesterInterceptor#TOPIC_NAME} attribute, assign it as target topic and
+     * removes from configs
+     *
+     * @param configs
+     */
+    private void checkAndAssignTopicName(final Map<String, ?> configs) {
+        if (configs.containsKey(TOPIC_NAME)) {
+            this.topicName = (String) configs.get(TOPIC_NAME);
+            configs.remove(TOPIC_NAME);
+        }
+    }
+
     /**
      * Replace value by given key k with masked string
+     *
      * @param <T>
      * @param configs
-     * @param k 
+     * @param k
      */
     private <T> void filterHelper(Map<String, T> configs, String k) {
         configs.replace(k, (T) "XXXX-XXX-XXX-XXX");

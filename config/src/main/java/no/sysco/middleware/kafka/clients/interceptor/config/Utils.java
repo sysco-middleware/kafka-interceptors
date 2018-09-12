@@ -18,7 +18,7 @@ import org.apache.kafka.common.errors.TopicExistsException;
 
 /**
  *
- * @author 100tsa
+ * @author SYSCO Middleware
  */
 public class Utils {
 
