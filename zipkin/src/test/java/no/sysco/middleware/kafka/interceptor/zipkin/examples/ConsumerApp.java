@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.interceptor.zipkin.examples;
 
-import no.sysco.middleware.kafka.interceptor.zipkin.TracingConsumerInterceptor;
+import no.sysco.middleware.kafka.interceptor.zipkin.TracingConsumerInterceptorTest;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
@@ -15,7 +15,7 @@ public class ConsumerApp {
     consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, "test-intercept-1");
     consumerConfig.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, Collections.singletonList(
-        TracingConsumerInterceptor.class));
+        TracingConsumerInterceptorTest.class));
 
     Consumer<String, String> consumer = new KafkaConsumer<>(consumerConfig);
     consumer.subscribe(Collections.singletonList("test"));
