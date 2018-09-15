@@ -43,10 +43,10 @@ abstract class BaseTracingInterceptor implements Configurable {
     if (reporter != null) {
       tracingBuilder.spanReporter(reporter);
     }
-    remoteServiceName = getRemoteServiceName(map);
     tracing = tracingBuilder.build();
     injector = tracing.propagation().injector(KafkaPropagation.HEADER_SETTER);
     extractor = tracing.propagation().extractor(KafkaPropagation.HEADER_GETTER);
+    remoteServiceName = getRemoteServiceName(map);
 
     LOGGER.info("Zipkin Interceptor configured with local service name {} and " +
         "remote service name {}", localServiceName, remoteServiceName);
@@ -76,10 +76,10 @@ abstract class BaseTracingInterceptor implements Configurable {
     }
 
     final String localServiceName;
-    if (kafkaServiceName == null) {
+    if (Objects.isNull(kafkaServiceName)) {
       final String zipkinServiceName =
           (String) map.get(TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_CONFIG);
-      if (zipkinServiceName == null) {
+      if (Objects.isNull(zipkinServiceName)) {
         localServiceName = TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_DEFAULT;
       } else {
         localServiceName = zipkinServiceName;
@@ -92,7 +92,7 @@ abstract class BaseTracingInterceptor implements Configurable {
 
   private Reporter<Span> buildReporter(Map<String, ?> map){
     final Sender sender = buildSender(map);
-    if (sender == null) {
+    if (Objects.isNull(sender)) {
       return null;
     }
     return AsyncReporter.create(sender);
@@ -106,9 +106,9 @@ abstract class BaseTracingInterceptor implements Configurable {
     final String kafkaBootstrapServers =
         (String) map.get(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
     final Sender sender;
-    if (zipkinApiUrl == null || zipkinApiUrl.trim().isEmpty()) {
-      if (zipkinBootstrapServers == null || zipkinBootstrapServers.trim().isEmpty()) {
-        if (kafkaBootstrapServers != null) {
+    if (Objects.isNull(zipkinApiUrl)) {
+      if (Objects.isNull(zipkinBootstrapServers)) {
+        if (Objects.nonNull(kafkaBootstrapServers)) {
           sender = KafkaSender.create(kafkaBootstrapServers).toBuilder().build();
           LOGGER.info("Zipkin Interceptor: Kafka sender created with Bootstrap servers: {}",
               kafkaBootstrapServers);
