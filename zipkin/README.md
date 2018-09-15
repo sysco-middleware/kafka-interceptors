@@ -4,23 +4,39 @@ Instrumentation to create traces from Kafka Clients (e.g. Consumer, Producer)
 using Interceptors (see [here](https://kafka.apache.org/0100/javadoc/org/apache/kafka/clients/producer/ProducerInterceptor.html)
 and [here](https://kafka.apache.org/0100/javadoc/org/apache/kafka/clients/consumer/ConsumerInterceptor.html)).
 
+This interceptors could be added to Kafka Connectors via configuration, and to other off-the-shelf components like 
+Kafka REST Proxy, KSQL and so on.
+
 ## Installation
 
 ### Producer Interceptor
+
+Producer Interceptor create spans on sending records. This span will only represent the time it took to 
+execute the `on_send` method provided by the API, not how long to send the actual record, or any other latency.
+
+#### Kafka Clients
 
 Add Interceptor to Producer Configuration:
 
 ```java
     producerConfig.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, Collections.singletonList(TracingProducerInterceptor.class));
 ```
-
 ### Consumer Interceptor
+
+Consumer Interceptor create spans on consumption of records. This span will only represent the time it took execute
+the `on_consume` method provided by the API, not how long it took to commit, or any other latency. 
+
+#### Kafka Clients
 
 ```java
     consumerConfig.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, Collections.singletonList(TracingConsumerInterceptor.class));
 ```
 
 ### Configuration
+
+By default, Interceptors will use Kafka Cluster as transport for Zipkin spans, and will pick `client.id` as service name.
+
+If you want to override these values, use this properties in your configuration:
 
 | Key | Value |
 |-----|-------|
