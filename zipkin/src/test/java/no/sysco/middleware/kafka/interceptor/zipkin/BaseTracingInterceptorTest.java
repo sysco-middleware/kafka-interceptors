@@ -14,7 +14,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class AbstractTracingInterceptorTest {
+public class BaseTracingInterceptorTest {
 
   private Map<String, String> initialConfig = new HashMap<>();
 
@@ -28,7 +28,7 @@ public class AbstractTracingInterceptorTest {
     //Given
     initialConfig.put(ProducerConfig.CLIENT_ID_CONFIG, "producer-app");
     //When
-    AbstractTracingInterceptor interceptor = new AbstractTracingInterceptorImpl();
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
     interceptor.configure(initialConfig);
     //Then
     assertNotNull(interceptor.tracing);
@@ -40,7 +40,7 @@ public class AbstractTracingInterceptorTest {
     //Given
     initialConfig.put(ConsumerConfig.GROUP_ID_CONFIG, "consumer-app");
     //When
-    AbstractTracingInterceptor interceptor = new AbstractTracingInterceptorImpl();
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
     interceptor.configure(initialConfig);
     //Then
     assertNotNull(interceptor.tracing);
@@ -52,7 +52,7 @@ public class AbstractTracingInterceptorTest {
     //Given
     initialConfig.put(TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_CONFIG, "app");
     //When
-    AbstractTracingInterceptor interceptor = new AbstractTracingInterceptorImpl();
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
     interceptor.configure(initialConfig);
     //Then
     assertNotNull(interceptor.tracing);
@@ -63,7 +63,7 @@ public class AbstractTracingInterceptorTest {
   public void shouldCreateKafkaSenderWhenNoSenderConfigProvided() {
     //Given
     //When
-    AbstractTracingInterceptor interceptor = new AbstractTracingInterceptorImpl();
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
     Sender sender = interceptor.buildSender(initialConfig);
     //Then
     assertTrue(sender instanceof KafkaSender);
@@ -74,7 +74,7 @@ public class AbstractTracingInterceptorTest {
     //Given
     initialConfig.put(TracingInterceptorConfig.ZIPKIN_BOOTSTRAP_SERVERS_CONFIG, "kafka:9092");
     //When
-    AbstractTracingInterceptor interceptor = new AbstractTracingInterceptorImpl();
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
     Sender sender = interceptor.buildSender(initialConfig);
     //Then
     assertTrue(sender instanceof KafkaSender);
@@ -86,13 +86,24 @@ public class AbstractTracingInterceptorTest {
     initialConfig.put(TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_CONFIG, "app");
     initialConfig.put(TracingInterceptorConfig.ZIPKIN_API_URL_CONFIG, "http://zipkin:9411");
     //When
-    AbstractTracingInterceptor interceptor = new AbstractTracingInterceptorImpl();
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
     Sender sender = interceptor.buildSender(initialConfig);
     //Then
     assertTrue(sender instanceof URLConnectionSender);
   }
 
-  private static class AbstractTracingInterceptorImpl extends AbstractTracingInterceptor {
+  @Test
+  public void shouldBuildWithoutSenderWhenNoProperties() {
+    //Given
+    Map<String, String> noConfig = new HashMap<>();
+    //When
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
+    interceptor.configure(noConfig);
+    //Then
+    assertNotNull(interceptor.tracing);
+  }
+
+  private static class BaseTracingInterceptorImpl extends BaseTracingInterceptor {
   }
 
 }

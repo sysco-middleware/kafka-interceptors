@@ -12,7 +12,7 @@ import zipkin2.Endpoint;
  * It will extract context from incoming Record, if exist injected in its header,
  * and use it to link it to the Span created by the interceptor.
  */
-public class TracingProducerInterceptor<K, V> extends AbstractTracingInterceptor implements ProducerInterceptor<K, V> {
+public class TracingProducerInterceptor<K, V> extends BaseTracingInterceptor implements ProducerInterceptor<K, V> {
 
   private static final String SEND_OPERATION = "on_send";
 

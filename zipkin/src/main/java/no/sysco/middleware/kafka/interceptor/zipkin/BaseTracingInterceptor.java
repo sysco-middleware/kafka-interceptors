@@ -1,7 +1,6 @@
 package no.sysco.middleware.kafka.interceptor.zipkin;
 
 import brave.Tracing;
-import brave.internal.Nullable;
 import brave.propagation.TraceContext.Extractor;
 import brave.propagation.TraceContext.Injector;
 import brave.sampler.Sampler;
@@ -20,61 +19,81 @@ import zipkin2.reporter.kafka11.KafkaSender;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Configure Interceptor tools to create Spans and send it to Zipkin.
  */
-abstract class AbstractTracingInterceptor implements Configurable {
-  static final Logger LOGGER = LoggerFactory.getLogger(AbstractTracingInterceptor.class);
+abstract class BaseTracingInterceptor implements Configurable {
+  static final Logger LOGGER = LoggerFactory.getLogger(BaseTracingInterceptor.class);
 
   Tracing tracing;
   Injector<Headers> injector;
   Extractor<Headers> extractor;
-  @Nullable
-  String remoteServiceName;
+  String remoteServiceName = TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT;
 
   @Override
   public void configure(Map<String, ?> map) {
     final Reporter<Span> reporter = buildReporter(map);
-    final String localServiceName = buildServiceName(map);
-    tracing =
+    final String localServiceName = getLocalServiceName(map);
+    final Tracing.Builder tracingBuilder =
         Tracing.newBuilder()
             .localServiceName(localServiceName)
-            .sampler(Sampler.ALWAYS_SAMPLE)
-            .spanReporter(reporter)
-            .build();
+            .sampler(Sampler.ALWAYS_SAMPLE);
+    if (reporter != null) {
+      tracingBuilder.spanReporter(reporter);
+    }
+    remoteServiceName = getRemoteServiceName(map);
+    tracing = tracingBuilder.build();
     injector = tracing.propagation().injector(KafkaPropagation.HEADER_SETTER);
     extractor = tracing.propagation().extractor(KafkaPropagation.HEADER_GETTER);
 
-    LOGGER.info("Zipkin Interceptor configured: {}", localServiceName);
+    LOGGER.info("Zipkin Interceptor configured with local service name {} and " +
+        "remote service name {}", localServiceName, remoteServiceName);
   }
 
-  private String buildServiceName(Map<String, ?> map) {
-    final String zipkinServiceName =
-        (String) map.get(TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_CONFIG);
+  private String getRemoteServiceName(Map<String, ?> map) {
+    final String zipkinRemoteServiceName =
+        (String) map.get(TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_CONFIG);
+    final String remoteServiceName;
+    if (Objects.isNull(zipkinRemoteServiceName)) {
+      remoteServiceName = TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT;
+    } else {
+      remoteServiceName = zipkinRemoteServiceName;
+    }
+    return remoteServiceName;
+  }
+
+  private String getLocalServiceName(Map<String, ?> map) {
     final String kafkaGroupId = (String) map.get(ConsumerConfig.GROUP_ID_CONFIG);
     final String kafkaClientId = (String) map.get(ProducerConfig.CLIENT_ID_CONFIG);
+
+    final String kafkaServiceName;
+    if (kafkaGroupId == null || kafkaGroupId.trim().isEmpty()) {
+      kafkaServiceName = kafkaClientId;
+    } else {
+      kafkaServiceName = kafkaGroupId;
+    }
+
     final String localServiceName;
-    if (zipkinServiceName == null || zipkinServiceName.trim().isEmpty()) {
-      if (kafkaGroupId == null || kafkaGroupId.trim().isEmpty()) {
-        localServiceName = kafkaClientId;
+    if (kafkaServiceName == null) {
+      final String zipkinServiceName =
+          (String) map.get(TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_CONFIG);
+      if (zipkinServiceName == null) {
+        localServiceName = TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_DEFAULT;
       } else {
-        localServiceName = kafkaGroupId;
+        localServiceName = zipkinServiceName;
       }
     } else {
-      localServiceName = zipkinServiceName;
+      localServiceName = kafkaServiceName;
     }
     return localServiceName;
   }
 
   private Reporter<Span> buildReporter(Map<String, ?> map){
     final Sender sender = buildSender(map);
-    final String zipkinRemoteServiceName =
-        (String) map.get(TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_CONFIG);
-    if (zipkinRemoteServiceName == null || zipkinRemoteServiceName.trim().isEmpty()) {
-      remoteServiceName = TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT;
-    } else {
-      remoteServiceName = zipkinRemoteServiceName;
+    if (sender == null) {
+      return null;
     }
     return AsyncReporter.create(sender);
   }
@@ -89,9 +108,14 @@ abstract class AbstractTracingInterceptor implements Configurable {
     final Sender sender;
     if (zipkinApiUrl == null || zipkinApiUrl.trim().isEmpty()) {
       if (zipkinBootstrapServers == null || zipkinBootstrapServers.trim().isEmpty()) {
-        sender = KafkaSender.create(kafkaBootstrapServers).toBuilder().build();
-        LOGGER.info("Zipkin Interceptor: Kafka sender created with Bootstrap servers: {}",
-            kafkaBootstrapServers);
+        if (kafkaBootstrapServers != null) {
+          sender = KafkaSender.create(kafkaBootstrapServers).toBuilder().build();
+          LOGGER.info("Zipkin Interceptor: Kafka sender created with Bootstrap servers: {}",
+              kafkaBootstrapServers);
+        } else {
+          sender = null;
+          LOGGER.warn("Zipkin Interceptor: No sender has been defined, spans will not be reported.");
+        }
       } else {
         sender = KafkaSender.create(zipkinBootstrapServers).toBuilder().build();
         LOGGER.info("Zipkin Interceptor: Kafka sender created with Bootstrap servers: {}",

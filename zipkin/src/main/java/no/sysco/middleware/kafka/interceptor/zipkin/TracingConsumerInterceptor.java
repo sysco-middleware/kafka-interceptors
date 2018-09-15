@@ -18,7 +18,7 @@ import java.util.Map;
  * It creates a span per Record, and link it with an incoming context that could be
  * stored in Records header.
  */
-public class TracingConsumerInterceptor<K, V> extends AbstractTracingInterceptor implements ConsumerInterceptor<K, V> {
+public class TracingConsumerInterceptor<K, V> extends BaseTracingInterceptor implements ConsumerInterceptor<K, V> {
 
   private static final String POLL_OPERATION = "on_consume";
 
