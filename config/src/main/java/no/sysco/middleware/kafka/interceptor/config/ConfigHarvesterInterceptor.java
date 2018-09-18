@@ -1,24 +1,33 @@
-package no.sysco.middleware.kafka.clients.interceptor.config;
+package no.sysco.middleware.kafka.interceptor.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.streams.StreamsConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Kafka interceptor for harvesting and storing Producer/Consumer/KafkaStreams user provided configs
@@ -29,10 +38,7 @@ import org.apache.kafka.streams.StreamsConfig;
  */
 public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, V>, ConsumerInterceptor<K, V> {
 
-    /**
-     * configurable property for this interceptor that may be used to override default target topic
-     */
-    public static final String TOPIC_NAME = "config.harvester.topic";
+    private final Logger log;
 
     private static final String DEFAULT_TOPIC_NAME = "__client_configs";
 
@@ -52,14 +58,50 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
     };
 
     /**
+     * Create and return new KafkaProducer instance
+     *
+     * @param props Propertiese object with KafkaProducer configuration
+     * @return new KafkaProducer instance
+     */
+    public static final Producer<String, Object> getProducer(final Properties props) {
+        return new KafkaProducer<>(props);
+    }
+
+    /**
+     * Create new topic if not exists
+     *
+     * @param name topic name
+     * @param partitions
+     * @param rf replication factor
+     * @param prop properties
+     */
+    public static final void createTopic(final String name, final int partitions, final short rf, final Properties prop) {
+        try (final AdminClient adminClient = KafkaAdminClient.create(prop)) {
+            try {
+                final NewTopic newTopic = new NewTopic(name, partitions, rf);
+                final CreateTopicsResult createTopicsResult = adminClient.createTopics(Collections.singleton(newTopic));
+                createTopicsResult.values().get(name).get();
+            } catch (InterruptedException | ExecutionException e) {
+                if (!(e.getCause() instanceof TopicExistsException)) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                // TopicExistsException - Swallow this exception, just means the topic already exists.
+            }
+        }
+    }
+
+    public ConfigHarvesterInterceptor() {
+        this.log = LoggerFactory.getLogger(ConfigHarvesterInterceptor.class);
+        MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    }
+
+    /**
      * Callback interceptor function
      *
      * @param configs user provided congiguration properties
      */
     @Override
     public void configure(final Map<String, ?> configs) {
-
-        MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
         this.checkAndAssignTopicName(configs);
 
@@ -73,7 +115,7 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
 
             configs.forEach((k, v) -> {
                 if (Arrays.asList(FILTERED_CONFIG_VALUES).contains(k)) {
-                    filterHelper(configs, k);
+                    filterField(configs, k);
                 }
             });
 
@@ -82,15 +124,20 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
             props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
             props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-            Utils.createTopic(this.topicName, 1, (short) 1, props);
-            Producer<String, Object> producer = Utils.getProducer(props);
+            createTopic(this.topicName, 1, (short) 1, props);
+            Producer<String, Object> producer = getProducer(props);
             //we send config not props so we have all original values
             String jsonizedConf = MAPPER.writeValueAsString(configs);
 
-            producer.send(new ProducerRecord<>(this.topicName, props.getProperty("client.id"), jsonizedConf));
+            producer.send(new ProducerRecord<>(this.topicName, props.getProperty("client.id"), jsonizedConf),
+                    (metadata, exception) -> {
+                        if (null != exception) {
+                            this.log.error("Config send request failed", exception);
+                        }
+                        producer.close(100, TimeUnit.MILLISECONDS);
+                    });
         } catch (JsonProcessingException ex) {
-            Logger.getLogger(ConfigHarvesterInterceptor.class.getName()).log(Level.SEVERE, null, ex);
-            throw new RuntimeException(ex.getMessage(), ex);
+            this.log.error("Couldn't seriliaze config data to JSON", ex);
         }
 
     }
@@ -102,9 +149,8 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
      * @param configs
      */
     private void checkAndAssignTopicName(final Map<String, ?> configs) {
-        if (configs.containsKey(TOPIC_NAME)) {
-            this.topicName = (String) configs.get(TOPIC_NAME);
-            configs.remove(TOPIC_NAME);
+        if (configs.containsKey(ConfigHarvesterInterceptorConfig.TOPIC_NAME)) {
+            this.topicName = (String) configs.get(ConfigHarvesterInterceptorConfig.TOPIC_NAME);
         }
     }
 
@@ -115,7 +161,7 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
      * @param configs
      * @param k
      */
-    private <T> void filterHelper(Map<String, T> configs, String k) {
+    private <T> void filterField(Map<String, T> configs, String k) {
         configs.replace(k, (T) "XXXX-XXX-XXX-XXX");
     }
 
