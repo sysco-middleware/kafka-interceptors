@@ -40,11 +40,10 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
 
     private final Logger log;
 
-    private static final String DEFAULT_TOPIC_NAME = "__client_configs";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private String topicName = DEFAULT_TOPIC_NAME;
+    private String topicName = ConfigHarvesterInterceptorConfig.DEFAULT_TOPIC_NAME;
 
     //we need to remove interceptors or we are going into endless interception loop
     private static final String[] IGNORED_PROPERTIES = {

@@ -25,7 +25,7 @@ package no.sysco.middleware.kafka.interceptor.config;
 
 /**
  *
- * @author 100tsa
+ * @author Sysco Middleware AS
  */
 public class ConfigHarvesterInterceptorConfig {
 
@@ -33,5 +33,6 @@ public class ConfigHarvesterInterceptorConfig {
      * configurable property for this interceptor that may be used to override default target topic
      */
     public static final String TOPIC_NAME = "config.harvester.topic";
+    static final String DEFAULT_TOPIC_NAME = "__client_configs";
     
 }

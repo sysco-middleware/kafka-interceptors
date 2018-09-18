@@ -23,13 +23,14 @@
  */
 package no.sysco.middleware.kafka.interceptor.config;
 
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
  *
- * @author 100tsa
+ * @author Sysco Middleware AS
  */
 public class ConfigHarvesterInterceptorTest {
     
@@ -48,32 +49,12 @@ public class ConfigHarvesterInterceptorTest {
     }
 
     /**
-     * Test of onAcknowledgement method, of class ConfigHarvesterInterceptor.
-     */
-    @Test
-    public void testOnAcknowledgement() {
-    }
-
-    /**
      * Test of onConsume method, of class ConfigHarvesterInterceptor.
      */
     @Test
     public void testOnConsume() {
-
+        ConfigHarvesterInterceptor instance = new ConfigHarvesterInterceptor();
+        ConsumerRecords consumedRecords = instance.onConsume(ConsumerRecords.EMPTY);
+        assertEquals(consumedRecords, ConsumerRecords.empty());
     }
-
-    /**
-     * Test of onCommit method, of class ConfigHarvesterInterceptor.
-     */
-    @Test
-    public void testOnCommit() {
-    }
-
-    /**
-     * Test of close method, of class ConfigHarvesterInterceptor.
-     */
-    @Test
-    public void testClose() {
-    }
-    
 }
