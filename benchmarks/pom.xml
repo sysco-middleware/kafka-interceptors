@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>no.sysco.middleware.kafka</groupId>
-        <artifactId>instrumentation</artifactId>
+        <artifactId>kafka-interceptors</artifactId>
         <version>0.1.1-SNAPSHOT</version>
     </parent>
     <artifactId>benchmarks</artifactId>

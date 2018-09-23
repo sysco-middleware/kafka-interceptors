@@ -16,7 +16,7 @@
     <modules>
         <module>zipkin</module>
         <module>config</module>
-        <module>instrumentation</module>
+        <module>benchmarks</module>
     </modules>
 
     <licenses>
