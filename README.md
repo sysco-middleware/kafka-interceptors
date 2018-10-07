@@ -6,5 +6,6 @@ Set of interceptors to integrate to your Kafka Clients.
 
 ## Supporter Interceptors
 
-* [Zipkin](zipkin): create traces from Producers and Consumers.
+* [Configuration Harvester](config): send clients configurations to a Kafka Topics for further analysis.
 
+* [Zipkin](zipkin): create Zipkin traces from Producers and Consumers.
