@@ -1,0 +1,164 @@
+package no.sysco.middleware.kafka.interceptor.zipkin;
+
+import brave.Tracing;
+import brave.propagation.TraceContext.Extractor;
+import brave.propagation.TraceContext.Injector;
+import brave.sampler.Sampler;
+import java.util.AbstractList;
+import java.util.Map;
+import java.util.Objects;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.Configurable;
+import org.apache.kafka.common.header.Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import zipkin2.Span;
+import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.Reporter;
+import zipkin2.reporter.Sender;
+import zipkin2.reporter.kafka11.KafkaSender;
+import zipkin2.reporter.urlconnection.URLConnectionSender;
+
+/**
+ * Configure Interceptor tools to create Spans and send it to Zipkin.
+ */
+abstract class BaseTracingInterceptor implements Configurable {
+  static final Logger LOGGER = LoggerFactory.getLogger(BaseTracingInterceptor.class);
+
+  Tracing tracing;
+  Injector<Headers> injector;
+  Extractor<Headers> extractor;
+  String remoteServiceName = TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT;
+
+  @Override
+  public void configure(Map<String, ?> map) {
+    final Reporter<Span> reporter = buildReporter(map);
+    final String localServiceName = getLocalServiceName(map);
+    final Tracing.Builder tracingBuilder =
+        Tracing.newBuilder()
+            .localServiceName(localServiceName)
+            .sampler(Sampler.ALWAYS_SAMPLE);
+    if (reporter != null) {
+      tracingBuilder.spanReporter(reporter);
+    }
+    tracing = tracingBuilder.build();
+    injector = tracing.propagation().injector(KafkaPropagation.HEADER_SETTER);
+    extractor = tracing.propagation().extractor(KafkaPropagation.HEADER_GETTER);
+    remoteServiceName = getRemoteServiceName(map);
+
+    LOGGER.info("Zipkin Interceptor configured with local service name {} and " +
+        "remote service name {}", localServiceName, remoteServiceName);
+  }
+
+  private String getRemoteServiceName(Map<String, ?> map) {
+    final String zipkinRemoteServiceName =
+        (String) map.get(TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_CONFIG);
+    final String remoteServiceName;
+    if (Objects.isNull(zipkinRemoteServiceName)) {
+      remoteServiceName = TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT;
+    } else {
+      remoteServiceName = zipkinRemoteServiceName;
+    }
+    return remoteServiceName;
+  }
+
+  private String getLocalServiceName(Map<String, ?> map) {
+    final String kafkaGroupId = (String) map.get(ConsumerConfig.GROUP_ID_CONFIG);
+    final String kafkaClientId = (String) map.get(ProducerConfig.CLIENT_ID_CONFIG);
+
+    final String kafkaServiceName;
+    if (kafkaGroupId == null || kafkaGroupId.trim().isEmpty()) {
+      kafkaServiceName = kafkaClientId;
+    } else {
+      kafkaServiceName = kafkaGroupId;
+    }
+
+    final String localServiceName;
+    if (Objects.isNull(kafkaServiceName)) {
+      final String zipkinServiceName =
+          extractString(map, TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_CONFIG);
+      if (Objects.isNull(zipkinServiceName)) {
+        localServiceName = TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_DEFAULT;
+      } else {
+        localServiceName = zipkinServiceName;
+      }
+    } else {
+      localServiceName = kafkaServiceName;
+    }
+    return localServiceName;
+  }
+
+  private Reporter<Span> buildReporter(Map<String, ?> map) {
+    final Sender sender = buildSender(map);
+    if (Objects.isNull(sender)) {
+      return null;
+    }
+    return AsyncReporter.create(sender);
+  }
+
+  Sender buildSender(Map<String, ?> map) {
+    final String zipkinApiUrl =
+        extractString(map, TracingInterceptorConfig.ZIPKIN_API_URL_CONFIG);
+    final String zipkinBootstrapServers =
+        extractString(map, TracingInterceptorConfig.ZIPKIN_BOOTSTRAP_SERVERS_CONFIG);
+    final Sender sender;
+    if (Objects.isNull(zipkinApiUrl)) {
+      if (Objects.isNull(zipkinBootstrapServers)) {
+        final String kafkaBootstrapServers =
+            extractString(map, CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
+        if (Objects.nonNull(kafkaBootstrapServers)) {
+          sender = KafkaSender.create(kafkaBootstrapServers).toBuilder().build();
+          LOGGER.info("Zipkin Interceptor: Kafka sender created with Bootstrap servers: {}",
+              kafkaBootstrapServers);
+        } else {
+          final String kafkaBootstrapServersList =
+              extractList(map, CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
+          if (kafkaBootstrapServersList != null) {
+            sender = KafkaSender.create(kafkaBootstrapServersList).toBuilder().build();
+            LOGGER.info("Brave Interceptor: Kafka sender created with Bootstrap servers: {}",
+                kafkaBootstrapServersList);
+          } else {
+            sender = null;
+            LOGGER.warn(
+                "Zipkin Interceptor: No sender has been defined, spans will not be reported.");
+          }
+        }
+      } else {
+        sender = KafkaSender.create(zipkinBootstrapServers).toBuilder().build();
+        LOGGER.info("Zipkin Interceptor: Kafka sender created with Bootstrap servers: {}",
+            zipkinBootstrapServers);
+      }
+    } else {
+      sender = URLConnectionSender.create(zipkinApiUrl).toBuilder().build();
+      LOGGER.info("Zipkin Interceptor: URL connection sender created with URL: {}", zipkinApiUrl);
+    }
+    return sender;
+  }
+
+  private String extractList(Map<String, ?> map, String key) {
+    final String value;
+    final Object valueObject = map.get(key);
+    if (valueObject != null) {
+      AbstractList valueList = (AbstractList) valueObject;
+      value = String.join(",", valueList);
+    } else {
+      LOGGER.warn("{} of type ArrayList is not found in properties", key);
+      value = null;
+    }
+    return value;
+  }
+
+  String extractString(Map<String, ?> map, String key) {
+    final String value;
+    final Object valueObject = map.get(key);
+    if (valueObject != null && valueObject instanceof String) {
+      value = (String) valueObject;
+    } else {
+      LOGGER.warn("{} of type String is not found in properties", key);
+      value = null;
+    }
+    return value;
+  }
+}
