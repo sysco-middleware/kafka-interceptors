@@ -17,6 +17,7 @@
         <module>zipkin</module>
         <module>config</module>
         <module>benchmarks</module>
+      <module>examples</module>
     </modules>
 
     <licenses>

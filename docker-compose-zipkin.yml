@@ -1,0 +1,10 @@
+---
+version: '3'
+services:
+  zipkin:
+    image: openzipkin/zipkin
+    environment:
+      STORAGE_TYPE: mem
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - 9411:9411
