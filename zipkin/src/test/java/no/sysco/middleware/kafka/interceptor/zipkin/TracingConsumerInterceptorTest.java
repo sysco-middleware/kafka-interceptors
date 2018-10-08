@@ -23,7 +23,7 @@ public class TracingConsumerInterceptorTest extends BaseTracingTest {
         Collections.singletonList(record));
     final ConsumerRecords<String, String> records = new ConsumerRecords<>(topicPartitionAndRecords);
     final TracingConsumerInterceptor<String, String> interceptor = new TracingConsumerInterceptor<>();
-    interceptor.configure(new HashMap<>());
+    interceptor.configure(map);
     //When
     final ConsumerRecords tracedRecords = interceptor.onConsume(records);
     //Then
@@ -40,7 +40,7 @@ public class TracingConsumerInterceptorTest extends BaseTracingTest {
         Arrays.asList(record, record, record));
     final ConsumerRecords<String, String> records = new ConsumerRecords<>(topicPartitionAndRecords);
     final TracingConsumerInterceptor<String, String> interceptor = new TracingConsumerInterceptor<>();
-    interceptor.configure(new HashMap<>());
+    interceptor.configure(map);
     interceptor.tracing = tracing;
     //When
     interceptor.onConsume(records);

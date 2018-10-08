@@ -17,7 +17,8 @@ public class TracingProducerInterceptorTest extends BaseTracingTest {
   public void shouldNotTouchRecords() {
     final TracingProducerInterceptor<String, String> interceptor =
         new TracingProducerInterceptor<>();
-    interceptor.configure(new HashMap<>());
+    interceptor.configure(map
+    );
     final ProducerRecord<String, String> tracedRecord = interceptor.onSend(record);
     Assert.assertEquals(record, tracedRecord);
   }
@@ -27,7 +28,7 @@ public class TracingProducerInterceptorTest extends BaseTracingTest {
     //Given
     final TracingProducerInterceptor<String, String> interceptor =
         new TracingProducerInterceptor<>();
-    interceptor.configure(new HashMap<>());
+    interceptor.configure(map);
     interceptor.tracing = tracing;
     //When
     interceptor.onSend(record);
