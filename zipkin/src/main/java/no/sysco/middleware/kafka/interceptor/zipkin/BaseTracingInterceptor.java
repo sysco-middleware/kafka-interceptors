@@ -31,9 +31,13 @@ abstract class BaseTracingInterceptor implements Configurable {
   Injector<Headers> injector;
   Extractor<Headers> extractor;
   String remoteServiceName = TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT;
+  String clientId;
+  String groupId;
 
   @Override
   public void configure(Map<String, ?> map) {
+    groupId = extractString(map, ConsumerConfig.GROUP_ID_CONFIG);
+    clientId = extractString(map, ProducerConfig.CLIENT_ID_CONFIG);
     final Reporter<Span> reporter = buildReporter(map);
     final String localServiceName = getLocalServiceName(map);
     final Tracing.Builder tracingBuilder =
@@ -65,27 +69,26 @@ abstract class BaseTracingInterceptor implements Configurable {
   }
 
   private String getLocalServiceName(Map<String, ?> map) {
-    final String kafkaGroupId = (String) map.get(ConsumerConfig.GROUP_ID_CONFIG);
-    final String kafkaClientId = (String) map.get(ProducerConfig.CLIENT_ID_CONFIG);
-
-    final String kafkaServiceName;
-    if (kafkaGroupId == null || kafkaGroupId.trim().isEmpty()) {
-      kafkaServiceName = kafkaClientId;
-    } else {
-      kafkaServiceName = kafkaGroupId;
-    }
-
     final String localServiceName;
-    if (Objects.isNull(kafkaServiceName)) {
-      final String zipkinServiceName =
-          extractString(map, TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_CONFIG);
-      if (Objects.isNull(zipkinServiceName)) {
+    final String zipkinServiceName =
+        extractString(map, TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_CONFIG);
+
+    if (!Objects.isNull(zipkinServiceName)) {
+      localServiceName = zipkinServiceName;
+    } else {
+
+      final String kafkaServiceName;
+      if (Objects.isNull(groupId) || groupId.trim().isEmpty()) {
+        kafkaServiceName = clientId;
+      } else {
+        kafkaServiceName = groupId;
+      }
+
+      if (Objects.isNull(kafkaServiceName)) {
         localServiceName = TracingInterceptorConfig.ZIPKIN_LOCAL_SERVICE_NAME_DEFAULT;
       } else {
-        localServiceName = zipkinServiceName;
+        localServiceName = kafkaServiceName;
       }
-    } else {
-      localServiceName = kafkaServiceName;
     }
     return localServiceName;
   }
@@ -150,10 +153,10 @@ abstract class BaseTracingInterceptor implements Configurable {
     return value;
   }
 
-  String extractString(Map<String, ?> map, String key) {
+  private String extractString(Map<String, ?> map, String key) {
     final String value;
     final Object valueObject = map.get(key);
-    if (valueObject != null && valueObject instanceof String) {
+    if (valueObject instanceof String) {
       value = (String) valueObject;
     } else {
       LOGGER.warn("{} of type String is not found in properties", key);

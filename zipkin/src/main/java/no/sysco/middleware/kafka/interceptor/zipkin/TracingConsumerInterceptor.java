@@ -2,16 +2,15 @@ package no.sysco.middleware.kafka.interceptor.zipkin;
 
 import brave.Span;
 import brave.propagation.TraceContextOrSamplingFlags;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import zipkin2.Endpoint;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Consumer Interceptor that creates spans when records are received from Consumer API.
@@ -41,7 +40,9 @@ public class TracingConsumerInterceptor<K, V> extends BaseTracingInterceptor imp
             consumerSpansForTopic.put(topic,
                 consumerSpanForTopic = tracing.tracer().nextSpan(extracted).name("poll")
                     .kind(Span.Kind.CONSUMER)
-                    .tag("kafka.topic", topic)
+                    .tag(KafkaTagKey.KAFKA_TOPIC, topic)
+                    .tag(KafkaTagKey.KAFKA_GROUP_ID, groupId)
+                    .tag(KafkaTagKey.KAFKA_CLIENT_ID, clientId)
                     .start());
           }
           // no need to remove propagation headers as we failed to extract anything
@@ -49,7 +50,10 @@ public class TracingConsumerInterceptor<K, V> extends BaseTracingInterceptor imp
         } else { // we extracted request-scoped data, so cannot share a consumer span.
           Span span = tracing.tracer().nextSpan(extracted);
           if (!span.isNoop()) {
-            span.name(POLL_OPERATION).kind(Span.Kind.CONSUMER).tag(KafkaTagKey.KAFKA_TOPIC, topic);
+            span.name(POLL_OPERATION).kind(Span.Kind.CONSUMER)
+                .tag(KafkaTagKey.KAFKA_TOPIC, topic)
+                .tag(KafkaTagKey.KAFKA_CLIENT_ID, clientId)
+                .tag(KafkaTagKey.KAFKA_GROUP_ID, groupId);
             if (remoteServiceName != null) {
               span.remoteEndpoint(Endpoint.newBuilder().serviceName(remoteServiceName).build());
             }
