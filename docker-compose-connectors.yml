@@ -10,9 +10,9 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: localhost
       CONNECT_REST_PORT: 8083
       CONNECT_GROUP_ID: jdbc-source-connect
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
       CONNECT_CONFIG_STORAGE_TOPIC: jdbc-source-connect-configs
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
       CONNECT_OFFSET_STORAGE_TOPIC: jdbc-source-connect-offsets
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_STATUS_STORAGE_TOPIC: jdbc-source-connect-status
@@ -38,13 +38,13 @@ services:
       CONNECT_BOOTSTRAP_SERVERS: kafka:9092
       CONNECT_REST_ADVERTISED_HOST_NAME: localhost
       CONNECT_REST_PORT: 8084
-      CONNECT_GROUP_ID: jdbc-source-connect
-      CONNECT_CONFIG_STORAGE_TOPIC: jdbc-source-connect-configs
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_GROUP_ID: jdbc-sink-connect
       CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
-      CONNECT_OFFSET_STORAGE_TOPIC: jdbc-source-connect-offsets
+      CONNECT_CONFIG_STORAGE_TOPIC: jdbc-sink-connect-configs
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_TOPIC: jdbc-sink-connect-offsets
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_STATUS_STORAGE_TOPIC: jdbc-source-connect-status
+      CONNECT_STATUS_STORAGE_TOPIC: jdbc-sink-connect-status
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
       CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter

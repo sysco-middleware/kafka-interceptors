@@ -3,7 +3,7 @@ all: build
 
 .PHONY: build
 build:
-	./mvnw clean package
+	mvn clean package
 
 .PHONY: dc-up
 docker:
@@ -17,6 +17,10 @@ dc-connector-up: build
 dc-down:
 	docker-compose down --remove-orphans
 
-.PHONY: deploy-connector
-deploy-connector:
-	curl -XPUT -H 'Content-Type:application/json' -d @examples/jdbc-source.json http://localhost:8084/connectors/jdbc_source/config
+.PHONY: deploy-source-connector
+deploy-source-connector:
+	curl -XPUT -H 'Content-Type:application/json' -d @examples/jdbc-source.json http://localhost:8083/connectors/jdbc_source/config
+
+.PHONY: deploy-sink-connector
+deploy-sink-connector:
+	curl -XPUT -H 'Content-Type:application/json' -d @examples/jdbc-sink.json http://localhost:8084/connectors/jdbc_sink/config
