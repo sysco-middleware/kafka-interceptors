@@ -5,6 +5,11 @@ all: build
 build:
 	mvn clean package
 
+.PHONY: release
+release:
+	mvn release:prepare
+	mvn release:perform
+
 .PHONY: dc-up
 docker:
 	docker-compose -f docker-compose.yml -f docker-compose-zipkin.yml up -d
