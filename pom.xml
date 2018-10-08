@@ -96,6 +96,7 @@
                     <updateBranchVersions>true</updateBranchVersions>
                     <pushChanges>true</pushChanges>
                     <releaseProfiles>release</releaseProfiles>
+                    <tagNameFormat>${project.version}</tagNameFormat>
                 </configuration>
             </plugin>
             <plugin>
