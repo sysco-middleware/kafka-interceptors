@@ -13,6 +13,10 @@ docker:
 dc-connector-up: build
 	docker-compose -f docker-compose.yml -f docker-compose-zipkin.yml -f docker-compose-connectors.yml up -d
 
+.PHONY: dc-ksql-up
+dc-ksql-up: build
+	docker-compose -f docker-compose.yml -f docker-compose-zipkin.yml -f docker-compose-ksql.yml up -d
+
 .PHONY: dc-down
 dc-down:
 	docker-compose down --remove-orphans
