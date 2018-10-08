@@ -5,7 +5,7 @@
 
     <groupId>no.sysco.middleware.kafka</groupId>
     <artifactId>kafka-interceptors</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>kafka-interceptors</name>
@@ -229,7 +229,7 @@
         <developerConnection>scm:git:ssh://git@github.com/sysco-middleware/kafka-interceptors.git
         </developerConnection>
         <url>http://github.com/sysco-middleware/kafka-interceptors/tree/master</url>
-        <tag>kafka-interceptors-0.1.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>

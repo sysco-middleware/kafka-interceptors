@@ -4,7 +4,7 @@
     <parent>
         <groupId>no.sysco.middleware.kafka</groupId>
         <artifactId>kafka-interceptors</artifactId>
-        <version>0.1.1</version>
+        <version>0.1.2-SNAPSHOT</version>
     </parent>
     <artifactId>benchmarks</artifactId>
     <name>Kafka Interceptor: Benchmarks (JMH)</name>
@@ -31,7 +31,7 @@
         <dependency>
             <groupId>no.sysco.middleware.kafka</groupId>
             <artifactId>kafka-interceptor-config</artifactId>
-            <version>0.1.1</version>
+            <version>0.1.2-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
     </dependencies>
