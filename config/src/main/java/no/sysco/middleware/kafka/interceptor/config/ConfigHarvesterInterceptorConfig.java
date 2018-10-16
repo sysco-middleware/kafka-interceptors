@@ -34,5 +34,6 @@ public class ConfigHarvesterInterceptorConfig {
      */
     public static final String TOPIC_NAME = "config.harvester.topic";
     static final String DEFAULT_TOPIC_NAME = "__client_configs";
+    static final String[] FILTERED_CONFIG_VALUES = new String[]{"ssl.key.password", "ssl.keystore.password"};
     
 }
