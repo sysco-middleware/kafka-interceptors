@@ -23,6 +23,7 @@
  */
 package no.sysco.middleware.kafka.interceptor.config;
 
+import no.sysco.middleware.kafka.interceptor.config.proto.ClientConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -35,6 +36,10 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  * @author SYSCO Middleware
  */
 public class ProducerConfigCollectorInterceptor<K, V> extends BaseConfigCollectorInterceptor implements ProducerInterceptor<K, V> {
+
+    ProducerConfigCollectorInterceptor() {
+        super(ClientConfig.ClientType.PRODUCER);
+    }
 
     /**
      * Not used as we need only catch configuration properties during app initialization

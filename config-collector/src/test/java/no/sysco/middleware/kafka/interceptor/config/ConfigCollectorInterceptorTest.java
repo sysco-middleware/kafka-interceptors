@@ -32,9 +32,9 @@ import static org.junit.Assert.*;
  *
  * @author Sysco Middleware AS
  */
-public class ConfigHarvesterInterceptorTest {
+public class ConfigCollectorInterceptorTest {
     
-    public ConfigHarvesterInterceptorTest() {
+    public ConfigCollectorInterceptorTest() {
     }
 
     /**

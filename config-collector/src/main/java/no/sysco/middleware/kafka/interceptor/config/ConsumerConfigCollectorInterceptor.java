@@ -23,6 +23,7 @@
  */
 package no.sysco.middleware.kafka.interceptor.config;
 
+import no.sysco.middleware.kafka.interceptor.config.proto.ClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -38,6 +39,10 @@ import java.util.Map;
  * @param <V>
  */
 public class ConsumerConfigCollectorInterceptor<K, V> extends BaseConfigCollectorInterceptor implements ConsumerInterceptor<K, V> {
+
+    ConsumerConfigCollectorInterceptor() {
+        super(ClientConfig.ClientType.CONSUMER);
+    }
 
     /**
      * Not used as we need only catch configuration properties during app initialization

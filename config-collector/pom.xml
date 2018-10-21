@@ -13,6 +13,10 @@
     <name>Kafka Interceptor: Config Collector</name>
     <description>Interceptor to collect Kafka Client Configurations.</description>
 
+    <properties>
+        <protobuf.version>3.6.1</protobuf.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -27,6 +31,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.9.6</version>
@@ -34,5 +43,21 @@
         </dependency>
     </dependencies>
 
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.os72</groupId>
+                <artifactId>protoc-jar-maven-plugin</artifactId>
+                <version>3.6.0.1</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

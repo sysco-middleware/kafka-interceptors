@@ -23,6 +23,8 @@
  */
 package no.sysco.middleware.kafka.interceptor.config;
 
+import org.apache.kafka.common.config.SslConfigs;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,5 +39,6 @@ public class ConfigCollectorInterceptorConfig {
      */
     public static final String CONFIG_COLLECTOR_TOPIC_CONFIG = "config.harvester.topic";
     public static final String CONFIG_COLLECTOR_TOPIC_DEFAULT = "__client_configs";
-    public static final List<String> CONFIG_COLLECTOR_BLACKLIST_DEFAULT = Arrays.asList("ssl.key.password", "ssl.keystore.password");
+    public static final List<String> CONFIG_COLLECTOR_BLACKLIST_DEFAULT =
+            Arrays.asList(SslConfigs.SSL_KEY_PASSWORD_CONFIG, SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG);
 }
