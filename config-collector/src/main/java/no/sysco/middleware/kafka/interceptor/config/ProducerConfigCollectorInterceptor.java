@@ -23,38 +23,41 @@
  */
 package no.sysco.middleware.kafka.interceptor.config;
 
-import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.apache.kafka.clients.producer.RecordMetadata;
+
+
 
 /**
+ * Kafka interceptor for harvesting and storing Producer user provided configs
  *
- * @author Sysco Middleware AS
+ * @author SYSCO Middleware
  */
-public class ConfigHarvesterInterceptorTest {
-    
-    public ConfigHarvesterInterceptorTest() {
+public class ProducerConfigCollectorInterceptor<K, V> extends BaseConfigCollectorInterceptor implements ProducerInterceptor<K, V> {
+
+    /**
+     * Not used as we need only catch configuration properties during app initialization
+     * Just return record unchanged
+     */
+    @Override
+    public ProducerRecord<K, V> onSend(ProducerRecord<K, V> record) {
+        return record;
     }
 
     /**
-     * Test of onSend method, of class ConfigHarvesterInterceptor.
+     * Not used as we need only catch configuration properties during app initialization
      */
-    @Test
-    public void testOnSend() {
-        ProducerConfigHarvesterInterceptor instance = new ProducerConfigHarvesterInterceptor();
-        ProducerRecord expResult = new ProducerRecord<>("test-topic", "test-key", "test-value");
-        ProducerRecord result = instance.onSend(expResult);
-        assertEquals(expResult, result);
+    @Override
+    public void onAcknowledgement(RecordMetadata metadata, Exception exception) {
+        //noop
     }
 
     /**
-     * Test of onConsume method, of class ConfigHarvesterInterceptor.
+     * Not used as we need only catch configuration properties during app initialization
      */
-    @Test
-    public void testOnConsume() {
-        ConsumerConfigHarvesterInterceptor instance = new ConsumerConfigHarvesterInterceptor();
-        ConsumerRecords consumedRecords = instance.onConsume(ConsumerRecords.EMPTY);
-        assertEquals(consumedRecords, ConsumerRecords.empty());
+    @Override
+    public void close() {
+        //noop
     }
 }
