@@ -1,42 +1,59 @@
+/*
+ * The MIT License
+ *
+ * Copyright 2018 Sysco Middleware AS.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package no.sysco.middleware.kafka.interceptor.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.streams.StreamsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import  no.sysco.middleware.kafka.interceptor.config.utils.HarvesterInterceptorUtils;
+import static no.sysco.middleware.kafka.interceptor.config.ConfigHarvesterInterceptorConfig.FILTERED_CONFIG_VALUES;
+
+
+
 /**
- * Kafka interceptor for harvesting and storing Producer/Consumer/KafkaStreams user provided configs
+ * Kafka interceptor for harvesting and storing Consumer user provided configs
  *
  * @author SYSCO Middleware
  * @param <K>
  * @param <V>
  */
-public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, V>, ConsumerInterceptor<K, V> {
+public class ConsumerConfigHarvesterInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
     private final Logger log;
 
@@ -47,50 +64,12 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
 
     //we need to remove interceptors or we are going into endless interception loop
     private static final String[] IGNORED_PROPERTIES = {
-        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
-        StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
         StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG};
 
-    private static final String[] FILTERED_CONFIG_VALUES = new String[]{
-        "ssl.key.password", "ssl.keystore.password"
-    };
 
-    /**
-     * Create and return new KafkaProducer instance
-     *
-     * @param props Propertiese object with KafkaProducer configuration
-     * @return new KafkaProducer instance
-     */
-    public static final Producer<String, Object> getProducer(final Properties props) {
-        return new KafkaProducer<>(props);
-    }
-
-    /**
-     * Create new topic if not exists
-     *
-     * @param name topic name
-     * @param partitions
-     * @param rf replication factor
-     * @param prop properties
-     */
-    public static final void createTopic(final String name, final int partitions, final short rf, final Properties prop) {
-        try (final AdminClient adminClient = KafkaAdminClient.create(prop)) {
-            try {
-                final NewTopic newTopic = new NewTopic(name, partitions, rf);
-                final CreateTopicsResult createTopicsResult = adminClient.createTopics(Collections.singleton(newTopic));
-                createTopicsResult.values().get(name).get();
-            } catch (InterruptedException | ExecutionException e) {
-                if (!(e.getCause() instanceof TopicExistsException)) {
-                    throw new RuntimeException(e.getMessage(), e);
-                }
-                // TopicExistsException - Swallow this exception, just means the topic already exists.
-            }
-        }
-    }
-
-    public ConfigHarvesterInterceptor() {
-        this.log = LoggerFactory.getLogger(ConfigHarvesterInterceptor.class);
+    public ConsumerConfigHarvesterInterceptor() {
+        this.log = LoggerFactory.getLogger(ProducerConfigHarvesterInterceptor.class);
         MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
@@ -114,17 +93,16 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
 
             configs.forEach((k, v) -> {
                 if (Arrays.asList(FILTERED_CONFIG_VALUES).contains(k)) {
-                    filterField(configs, k);
+                    HarvesterInterceptorUtils.filterField(configs, k);
                 }
             });
 
-            //we need to add own serializers which are not here if we intercept consumer or are not string if we are in 
-            //KafkaStreams app
+            //we need to add own serializers which are not presented when we we intercept consumer 
             props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
             props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-            createTopic(this.topicName, 1, (short) 1, props);
-            Producer<String, Object> producer = getProducer(props);
+            HarvesterInterceptorUtils.createTopic(this.topicName, 1, (short) 1, props);
+            Producer<String, Object> producer = HarvesterInterceptorUtils.getProducer(props);
             //we send config not props so we have all original values
             String jsonizedConf = MAPPER.writeValueAsString(configs);
 
@@ -142,7 +120,7 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
     }
 
     /**
-     * check if config contains {@link ConfigHarvesterInterceptor#TOPIC_NAME} attribute, assign it as target topic and
+     * check if config contains {@link ProducerConfigHarvesterInterceptor#TOPIC_NAME} attribute, assign it as target topic and
      * removes from configs
      *
      * @param configs
@@ -151,39 +129,6 @@ public class ConfigHarvesterInterceptor<K, V> implements ProducerInterceptor<K, 
         if (configs.containsKey(ConfigHarvesterInterceptorConfig.TOPIC_NAME)) {
             this.topicName = (String) configs.get(ConfigHarvesterInterceptorConfig.TOPIC_NAME);
         }
-    }
-
-    /**
-     * Replace value by given key k with masked string
-     *
-     * @param <T>
-     * @param configs
-     * @param k
-     */
-    private <T> void filterField(Map<String, T> configs, String k) {
-        configs.replace(k, (T) "XXXX-XXX-XXX-XXX");
-    }
-
-    /**
-     * Not used as we need only catch configuration properties during app initialzation. Just return unchanged record
-     *
-     * @param record
-     * @return unchanged record
-     */
-    @Override
-    public ProducerRecord<K, V> onSend(ProducerRecord<K, V> record) {
-        return record;
-    }
-
-    /**
-     * Not used as we need only catch configuration properties during app initialzation
-     *
-     * @param metadata
-     * @param exception
-     */
-    @Override
-    public void onAcknowledgement(RecordMetadata metadata, Exception exception) {
-        //noop
     }
 
     /**

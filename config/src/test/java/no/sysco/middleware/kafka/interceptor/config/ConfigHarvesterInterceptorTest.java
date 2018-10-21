@@ -42,7 +42,7 @@ public class ConfigHarvesterInterceptorTest {
      */
     @Test
     public void testOnSend() {
-        ConfigHarvesterInterceptor instance = new ConfigHarvesterInterceptor();
+        ProducerConfigHarvesterInterceptor instance = new ProducerConfigHarvesterInterceptor();
         ProducerRecord expResult = new ProducerRecord<>("test-topic", "test-key", "test-value");
         ProducerRecord result = instance.onSend(expResult);
         assertEquals(expResult, result);
@@ -53,7 +53,7 @@ public class ConfigHarvesterInterceptorTest {
      */
     @Test
     public void testOnConsume() {
-        ConfigHarvesterInterceptor instance = new ConfigHarvesterInterceptor();
+        ConsumerConfigHarvesterInterceptor instance = new ConsumerConfigHarvesterInterceptor();
         ConsumerRecords consumedRecords = instance.onConsume(ConsumerRecords.EMPTY);
         assertEquals(consumedRecords, ConsumerRecords.empty());
     }
