@@ -74,7 +74,7 @@ class BaseConfigCollectorInterceptor implements Configurable {
         final HashMap<String, Object> configProducerConfigs = new HashMap<>();
         configs.forEach((k, v) -> {
             if (!k.contains(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG)) {
-                configProducerConfigs.remove(k);
+                configProducerConfigs.put(k, v);
             }
         });
         configProducerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -90,9 +90,9 @@ class BaseConfigCollectorInterceptor implements Configurable {
         builder.setType(clientType).setId(clientId);
         configs.forEach((k, v) -> {
             if (CONFIG_COLLECTOR_BLACKLIST_DEFAULT.contains(k)) {
-                builder.getEntriesMap().put(k, "<value>");
+                builder.putEntries(k, "<value>");
             } else {
-                builder.getEntriesMap().put(k, v.toString());
+                builder.putEntries(k, v.toString());
             }
         });
         final byte[] value = builder.build().toByteArray();
