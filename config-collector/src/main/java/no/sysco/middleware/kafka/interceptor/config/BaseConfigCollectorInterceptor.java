@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import static no.sysco.middleware.kafka.interceptor.config.ConfigCollectorInterceptorConfig.CONFIG_COLLECTOR_BLACKLIST_DEFAULT;
 
@@ -65,7 +64,7 @@ class BaseConfigCollectorInterceptor implements Configurable {
             final Producer<String, byte[]> producer = buildConfigProducer(configs);
             producer.send(record).get();
             producer.close();
-        } catch (InterruptedException | ExecutionException ex) {
+        } catch (Exception ex) {
             LOGGER.error("Config Collector Interceptor failed", ex);
         }
     }
