@@ -29,6 +29,8 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.Configurable;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +60,6 @@ class BaseConfigCollectorInterceptor implements Configurable {
      */
     @Override
     public void configure(final Map<String, ?> configs) {
-
         try {
             final ProducerRecord<String, byte[]> record = buildConfigRecord(configs);
             final Producer<String, byte[]> producer = buildConfigProducer(configs);
@@ -67,7 +68,6 @@ class BaseConfigCollectorInterceptor implements Configurable {
         } catch (InterruptedException | ExecutionException ex) {
             LOGGER.error("Config Collector Interceptor failed", ex);
         }
-
     }
 
     private Producer<String, byte[]> buildConfigProducer(Map<String, ?> configs) {
@@ -77,10 +77,8 @@ class BaseConfigCollectorInterceptor implements Configurable {
                 configProducerConfigs.remove(k);
             }
         });
-
-        //we need to add own serializers to ensure we serialize string data
-        configProducerConfigs.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        configProducerConfigs.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        configProducerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        configProducerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
 
         return new KafkaProducer<>(configProducerConfigs);
     }

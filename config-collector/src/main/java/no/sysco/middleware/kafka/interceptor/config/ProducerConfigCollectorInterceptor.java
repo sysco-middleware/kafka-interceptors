@@ -37,7 +37,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public class ProducerConfigCollectorInterceptor<K, V> extends BaseConfigCollectorInterceptor implements ProducerInterceptor<K, V> {
 
-    ProducerConfigCollectorInterceptor() {
+    public ProducerConfigCollectorInterceptor() {
         super(ClientConfig.ClientType.PRODUCER);
     }
 

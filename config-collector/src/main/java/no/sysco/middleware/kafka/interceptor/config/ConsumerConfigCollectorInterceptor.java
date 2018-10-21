@@ -40,7 +40,7 @@ import java.util.Map;
  */
 public class ConsumerConfigCollectorInterceptor<K, V> extends BaseConfigCollectorInterceptor implements ConsumerInterceptor<K, V> {
 
-    ConsumerConfigCollectorInterceptor() {
+    public ConsumerConfigCollectorInterceptor() {
         super(ClientConfig.ClientType.CONSUMER);
     }
 
