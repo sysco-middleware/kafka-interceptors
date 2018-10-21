@@ -94,8 +94,9 @@ class BaseConfigCollectorInterceptor implements Configurable {
                 builder.putEntries(k, v.toString());
             }
         });
+        final String key = String.format("%s-%s", clientType.name(), clientId);
         final byte[] value = builder.build().toByteArray();
-        return new ProducerRecord<>(topicName, clientId, value);
+        return new ProducerRecord<>(topicName, key, value);
     }
 
     private String configTopic(Map<String, ?> configs) {
