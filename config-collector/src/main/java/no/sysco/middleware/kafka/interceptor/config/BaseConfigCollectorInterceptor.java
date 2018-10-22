@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static no.sysco.middleware.kafka.interceptor.config.ConfigCollectorInterceptorConfig.CONFIG_COLLECTOR_BLACKLIST_DEFAULT;
 
@@ -101,8 +102,9 @@ class BaseConfigCollectorInterceptor implements Configurable {
 
     private String configTopic(Map<String, ?> configs) {
         final String topicName;
-        if (configs.containsKey(ConfigCollectorInterceptorConfig.CONFIG_COLLECTOR_TOPIC_CONFIG)) {
-            topicName = (String) configs.get(ConfigCollectorInterceptorConfig.CONFIG_COLLECTOR_TOPIC_CONFIG);
+        final Object maybeTopicName = configs.get(ConfigCollectorInterceptorConfig.CONFIG_COLLECTOR_TOPIC_CONFIG);
+        if (Objects.nonNull(maybeTopicName) && maybeTopicName instanceof String) {
+            topicName = (String) maybeTopicName;
         } else {
             topicName = ConfigCollectorInterceptorConfig.CONFIG_COLLECTOR_TOPIC_DEFAULT;
         }
