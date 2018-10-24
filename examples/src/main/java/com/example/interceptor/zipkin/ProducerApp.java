@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import no.sysco.middleware.kafka.interceptor.zipkin.TracingProducerInterceptor;
-import no.sysco.middleware.kafka.interceptor.config.ProducerConfigHarvesterInterceptor;
+import no.sysco.middleware.kafka.interceptor.config.ProducerConfigCollectorInterceptor;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -21,7 +21,7 @@ public class ProducerApp {
     producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     producerConfig.put(ProducerConfig.CLIENT_ID_CONFIG, "producer-app");
     producerConfig.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
-        Arrays.asList(TracingProducerInterceptor.class, ProducerConfigHarvesterInterceptor.class));
+        Arrays.asList(TracingProducerInterceptor.class, ProducerConfigCollectorInterceptor.class));
 
     Producer<String, String> producer = new KafkaProducer<>(producerConfig);
     ProducerRecord<String, String> producerRecord = new ProducerRecord<>("test", "1", "abc");

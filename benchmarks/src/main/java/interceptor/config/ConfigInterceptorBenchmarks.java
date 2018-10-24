@@ -24,8 +24,8 @@
 package interceptor.config;
 
 import java.util.concurrent.TimeUnit;
-import no.sysco.middleware.kafka.interceptor.config.ProducerConfigHarvesterInterceptor;
-import no.sysco.middleware.kafka.interceptor.config.ConsumerConfigHarvesterInterceptor;
+import no.sysco.middleware.kafka.interceptor.config.ProducerConfigCollectorInterceptor;
+import no.sysco.middleware.kafka.interceptor.config.ConsumerConfigCollectorInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -54,11 +54,11 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @State(Scope.Thread)
 public class ConfigInterceptorBenchmarks {
 
-    ProducerRecord<String, String> producerRecord = new ProducerRecord<>("topic", "key", "value");
-    ConsumerRecords<Object, Object> consumerRecords = ConsumerRecords.EMPTY;
+    private ProducerRecord<String, String> producerRecord = new ProducerRecord<>("topic", "key", "value");
+    private ConsumerRecords<Object, Object> consumerRecords = ConsumerRecords.EMPTY;
 
-    ProducerConfigHarvesterInterceptor<String, String> pInterceptor = new ProducerConfigHarvesterInterceptor<>();
-    ConsumerConfigHarvesterInterceptor<Object, Object> cInterceptor = new ConsumerConfigHarvesterInterceptor<>();
+    private ProducerConfigCollectorInterceptor<String, String> pInterceptor = new ProducerConfigCollectorInterceptor<>();
+    private ConsumerConfigCollectorInterceptor<Object, Object> cInterceptor = new ConsumerConfigCollectorInterceptor<>();
 
     @Benchmark
     public ProducerRecord<String, String> interceptEmptyOnSend() {
