@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>no.sysco.middleware.kafka</groupId>
     <artifactId>kafka-interceptors</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.2.0</version>
     <packaging>pom</packaging>
 
     <name>kafka-interceptors</name>
@@ -154,7 +153,7 @@
                 <artifactId>cobertura-maven-plugin</artifactId>
                 <version>2.7</version>
                 <configuration>
-                    <check/>
+                    <check />
                     <formats>
                         <format>html</format>
                         <format>xml</format>
@@ -237,7 +236,7 @@
         <developerConnection>scm:git:ssh://git@github.com/sysco-middleware/kafka-interceptors.git
         </developerConnection>
         <url>http://github.com/sysco-middleware/kafka-interceptors/tree/master</url>
-        <tag>HEAD</tag>
+        <tag>0.2.0</tag>
     </scm>
 
     <issueManagement>
