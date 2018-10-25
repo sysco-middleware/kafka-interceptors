@@ -42,7 +42,7 @@ public class ConfigCollectorInterceptorTest {
      */
     @Test
     public void testOnSend() {
-        ProducerConfigCollectorInterceptor<String, String> instance = new ProducerConfigCollectorInterceptor<>();
+        ConfigCollectorProducerInterceptor<String, String> instance = new ConfigCollectorProducerInterceptor<>();
         ProducerRecord<String, String> expResult = new ProducerRecord<>("test-topic", "test-key", "test-value");
         ProducerRecord<String, String> result = instance.onSend(expResult);
         assertEquals(expResult, result);
@@ -53,7 +53,7 @@ public class ConfigCollectorInterceptorTest {
      */
     @Test
     public void testOnConsume() {
-        ConsumerConfigCollectorInterceptor<Object, Object> instance = new ConsumerConfigCollectorInterceptor<>();
+        ConfigCollectorConsumerInterceptor<Object, Object> instance = new ConfigCollectorConsumerInterceptor<>();
         ConsumerRecords<Object, Object> consumedRecords = instance.onConsume(ConsumerRecords.EMPTY);
         assertEquals(consumedRecords, ConsumerRecords.empty());
     }

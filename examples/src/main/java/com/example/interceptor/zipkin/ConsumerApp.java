@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Properties;
 import no.sysco.middleware.kafka.interceptor.zipkin.TracingConsumerInterceptor;
-import no.sysco.middleware.kafka.interceptor.config.ConsumerConfigCollectorInterceptor;
+import no.sysco.middleware.kafka.interceptor.config.ConfigCollectorConsumerInterceptor;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -21,7 +21,7 @@ public class ConsumerApp {
     consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, "consumer-group-1");
     consumerConfig.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
-        Arrays.asList(TracingConsumerInterceptor.class, ConsumerConfigCollectorInterceptor.class));
+        Arrays.asList(TracingConsumerInterceptor.class, ConfigCollectorConsumerInterceptor.class));
 
     Consumer<String, String> consumer = new KafkaConsumer<>(consumerConfig);
     consumer.subscribe(Collections.singletonList("test"));

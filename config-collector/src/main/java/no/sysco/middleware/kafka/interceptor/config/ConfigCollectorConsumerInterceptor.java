@@ -24,21 +24,24 @@
 package no.sysco.middleware.kafka.interceptor.config;
 
 import no.sysco.middleware.kafka.interceptor.config.proto.ClientConfig;
-import org.apache.kafka.clients.producer.ProducerInterceptor;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.clients.consumer.ConsumerInterceptor;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
 
-
+import java.util.Map;
 
 /**
- * Kafka interceptor for harvesting and storing Producer user provided configs
+ * Kafka interceptor for harvesting and storing Consumer user provided configs
  *
  * @author SYSCO Middleware
+ * @param <K>
+ * @param <V>
  */
-public class ProducerConfigCollectorInterceptor<K, V> extends BaseConfigCollectorInterceptor implements ProducerInterceptor<K, V> {
+public class ConfigCollectorConsumerInterceptor<K, V> extends BaseConfigCollectorInterceptor implements ConsumerInterceptor<K, V> {
 
-    public ProducerConfigCollectorInterceptor() {
-        super(ClientConfig.ClientType.PRODUCER);
+    public ConfigCollectorConsumerInterceptor() {
+        super(ClientConfig.ClientType.CONSUMER);
     }
 
     /**
@@ -46,15 +49,15 @@ public class ProducerConfigCollectorInterceptor<K, V> extends BaseConfigCollecto
      * Just return record unchanged
      */
     @Override
-    public ProducerRecord<K, V> onSend(ProducerRecord<K, V> record) {
-        return record;
+    public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
+        return records;
     }
 
     /**
      * Not used as we need only catch configuration properties during app initialization
      */
     @Override
-    public void onAcknowledgement(RecordMetadata metadata, Exception exception) {
+    public void onCommit(Map<TopicPartition, OffsetAndMetadata> offsets) {
         //noop
     }
 
@@ -65,4 +68,5 @@ public class ProducerConfigCollectorInterceptor<K, V> extends BaseConfigCollecto
     public void close() {
         //noop
     }
+
 }

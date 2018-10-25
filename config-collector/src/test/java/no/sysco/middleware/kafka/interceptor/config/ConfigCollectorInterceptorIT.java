@@ -28,11 +28,11 @@ public class ConfigCollectorInterceptorIT {
     @Test
     public void should_send_config_record_when_producing_and_consuming() throws ExecutionException, InterruptedException {
         final Properties producerConfig = new Properties();
-        producerConfig.setProperty(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, ProducerConfigCollectorInterceptor.class.getName());
+        producerConfig.setProperty(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, ConfigCollectorProducerInterceptor.class.getName());
         final KafkaProducer<String, String> producer = kafka.helper().createStringProducer(producerConfig);
 
         final Properties consumerConfig = new Properties();
-        consumerConfig.setProperty(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, ConsumerConfigCollectorInterceptor.class.getName());
+        consumerConfig.setProperty(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, ConfigCollectorConsumerInterceptor.class.getName());
         final KafkaConsumer<String, String> consumer = kafka.helper().createStringConsumer(consumerConfig);
 
         kafka.helper().produce("test_topic", producer, Collections.singletonMap("key", "value"));
