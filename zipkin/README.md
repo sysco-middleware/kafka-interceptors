@@ -38,12 +38,13 @@ By default, Interceptors will use Kafka Cluster as transport for Zipkin spans, a
 
 If you want to override these values, use this properties in your configuration:
 
-| Key | Value |
-|-----|-------|
-| `zipkin.api.url` | URL where Zipkin API is deployed. If not present, `zipkin.bootstrap.servers` is used. |
-| `zipkin.bootstrap.servers` | Bootstrap Servers list to send Spans. if not present, `bootstrap.servers` (Kafka Client property) is used. |
-| `zipkin.local.service_name` | Application Service name used to tag span. If not present, and producer, `client.id` will be used. If not present and consumer, `group.id` is used. |
-| `zipkin.remote.service_name` | Remote Service to assign to Kafka. If not present, `"kafka"` is used.|
+| Key                           | Value                                                                                 |
+|-------------------------------|---------------------------------------------------------------------------------------|
+| `zipkin.api.url`              | URL where Zipkin API is deployed. If not present, `zipkin.bootstrap.servers` is used. |
+| `zipkin.bootstrap.servers`    | Bootstrap Servers list to send Spans. if not present, `bootstrap.servers` (Kafka Client property) is used. |
+| `zipkin.local.service_name`   | Application Service name used to tag span. If not present, and producer, `client.id` will be used. If not present and consumer, `group.id` is used. |
+| `zipkin.remote.service_name`  | Remote Service to assign to Kafka. If not present, `"kafka"` is used.                 |
+| `zipkin.sampler.rate`         | Rate to sample spans. Default: `1.0`                                                  |
 
 ### How to test it
 
