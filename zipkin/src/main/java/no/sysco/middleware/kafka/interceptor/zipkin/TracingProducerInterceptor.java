@@ -29,8 +29,7 @@ public class TracingProducerInterceptor<K, V> extends BaseTracingInterceptor imp
       if (remoteServiceName != null) {
         span.remoteEndpoint(Endpoint.newBuilder().serviceName(remoteServiceName).build());
       }
-      span
-          .tag(KafkaTagKey.KAFKA_TOPIC, record.topic())
+      span.tag(KafkaTagKey.KAFKA_TOPIC, record.topic())
           .tag(KafkaTagKey.KAFKA_CLIENT_ID, clientId)
           .name(SEND_OPERATION)
           .kind(Span.Kind.PRODUCER)

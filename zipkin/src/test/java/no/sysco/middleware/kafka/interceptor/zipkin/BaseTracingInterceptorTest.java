@@ -60,6 +60,54 @@ public class BaseTracingInterceptorTest {
   }
 
   @Test
+  public void shouldConfigureWhenSamplingRateProvided() {
+    //Given
+    initialConfig.put(TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_CONFIG, "0.5");
+    //When
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
+    interceptor.configure(initialConfig);
+    //Then
+    assertNotNull(interceptor.tracing);
+    assertEquals(TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT, interceptor.remoteServiceName);
+  }
+
+  @Test
+  public void shouldNotConfigureWhenInvalidSamplingRateProvided() {
+    //Given
+    initialConfig.put(TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_CONFIG, "1.5");
+    //When
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
+    interceptor.configure(initialConfig);
+    //Then
+    assertNotNull(interceptor.tracing);
+    assertEquals(TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT, interceptor.remoteServiceName);
+  }
+
+  @Test
+  public void shouldNotConfigureWhenInvalidSamplingRate2Provided() {
+    //Given
+    initialConfig.put(TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_CONFIG, "NaN");
+    //When
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
+    interceptor.configure(initialConfig);
+    //Then
+    assertNotNull(interceptor.tracing);
+    assertEquals(TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT, interceptor.remoteServiceName);
+  }
+
+  @Test
+  public void shouldNotConfigureWhenInvalidSamplingRate3Provided() {
+    //Given
+    initialConfig.put(TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_CONFIG, "-");
+    //When
+    BaseTracingInterceptor interceptor = new BaseTracingInterceptorImpl();
+    interceptor.configure(initialConfig);
+    //Then
+    assertNotNull(interceptor.tracing);
+    assertEquals(TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT, interceptor.remoteServiceName);
+  }
+
+  @Test
   public void shouldCreateKafkaSenderWhenNoSenderConfigProvided() {
     //Given
     //When

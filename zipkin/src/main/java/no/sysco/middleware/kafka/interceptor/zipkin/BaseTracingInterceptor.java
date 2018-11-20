@@ -40,10 +40,11 @@ abstract class BaseTracingInterceptor implements Configurable {
     clientId = extractString(map, ProducerConfig.CLIENT_ID_CONFIG);
     final Reporter<Span> reporter = buildReporter(map);
     final String localServiceName = getLocalServiceName(map);
+    final Float samplerRate = getSamplerRate(map);
     final Tracing.Builder tracingBuilder =
         Tracing.newBuilder()
             .localServiceName(localServiceName)
-            .sampler(Sampler.ALWAYS_SAMPLE);
+            .sampler(Sampler.create(samplerRate));
     if (reporter != null) {
       tracingBuilder.spanReporter(reporter);
     }
@@ -56,9 +57,32 @@ abstract class BaseTracingInterceptor implements Configurable {
         "remote service name {}", localServiceName, remoteServiceName);
   }
 
+  private Float getSamplerRate(Map<String, ?> map) {
+    final String rate = extractString(map, TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_CONFIG);
+    if (Objects.isNull(rate)) {
+      return TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_DEFAULT;
+    } else {
+      try {
+        final Float samplerRate = Float.valueOf(rate);
+        if (samplerRate > 1.0 || samplerRate <= 0.0 || samplerRate.isNaN()) {
+          LOGGER.warn("Invalid sampler rate {}, must be between 0 and 1. Falling back to {}",
+              samplerRate, TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_FALLBACK);
+          return TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_FALLBACK;
+        } else {
+          return samplerRate;
+        }
+      } catch (NumberFormatException e) {
+        LOGGER.warn(
+            "Invalid sampler rate {}, must be a valid number between 0 and 1. Falling back to {}",
+            rate, TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_FALLBACK);
+        return TracingInterceptorConfig.ZIPKIN_SAMPLER_RATE_FALLBACK;
+      }
+    }
+  }
+
   private String getRemoteServiceName(Map<String, ?> map) {
     final String zipkinRemoteServiceName =
-        (String) map.get(TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_CONFIG);
+        extractString(map, TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_CONFIG);
     final String remoteServiceName;
     if (Objects.isNull(zipkinRemoteServiceName)) {
       remoteServiceName = TracingInterceptorConfig.ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT;

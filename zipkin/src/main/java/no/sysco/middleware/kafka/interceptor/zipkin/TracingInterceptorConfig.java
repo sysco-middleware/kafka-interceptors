@@ -10,4 +10,9 @@ public class TracingInterceptorConfig {
 
   public static final String ZIPKIN_REMOTE_SERVICE_NAME_CONFIG = "zipkin.remote.service.name";
   static final String ZIPKIN_REMOTE_SERVICE_NAME_DEFAULT = "kafka";
+
+  public static final String ZIPKIN_SAMPLER_RATE_CONFIG = "zipkin.sampler.rate";
+  public static final Float ZIPKIN_SAMPLER_RATE_DEFAULT = 1.0F;
+  public static final Float ZIPKIN_SAMPLER_RATE_FALLBACK = 0.0F;
+
 }
