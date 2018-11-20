@@ -18,4 +18,4 @@ services:
       KSQL_PRODUCER_INTERCEPTOR_CLASSES: "no.sysco.middleware.kafka.interceptor.zipkin.TracingProducerInterceptor"
       KSQL_CONSUMER_INTERCEPTOR_CLASSES: "no.sysco.middleware.kafka.interceptor.zipkin.TracingConsumerInterceptor"
     volumes:
-      - ./zipkin/target/kafka-interceptor-zipkin-0.1.1-SNAPSHOT.jar:/usr/share/java/ksql-server/kafka-interceptor-zipkin.jar
+      - ./zipkin/target/kafka-interceptor-zipkin-0.2.1-SNAPSHOT.jar:/usr/share/java/ksql-server/kafka-interceptor-zipkin.jar

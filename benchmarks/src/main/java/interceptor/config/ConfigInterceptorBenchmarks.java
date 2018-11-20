@@ -24,7 +24,8 @@
 package interceptor.config;
 
 import java.util.concurrent.TimeUnit;
-import no.sysco.middleware.kafka.interceptor.config.ConfigHarvesterInterceptor;
+import no.sysco.middleware.kafka.interceptor.config.ConfigCollectorProducerInterceptor;
+import no.sysco.middleware.kafka.interceptor.config.ConfigCollectorConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -53,19 +54,20 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @State(Scope.Thread)
 public class ConfigInterceptorBenchmarks {
 
-    ProducerRecord<String, String> producerRecord = new ProducerRecord<>("topic", "key", "value");
-    ConsumerRecords<Object, Object> consumerRecords = ConsumerRecords.EMPTY;
+    private ProducerRecord<String, String> producerRecord = new ProducerRecord<>("topic", "key", "value");
+    private ConsumerRecords<Object, Object> consumerRecords = ConsumerRecords.EMPTY;
 
-    ConfigHarvesterInterceptor interceptor = new ConfigHarvesterInterceptor();
+    private ConfigCollectorProducerInterceptor<String, String> pInterceptor = new ConfigCollectorProducerInterceptor<>();
+    private ConfigCollectorConsumerInterceptor<Object, Object> cInterceptor = new ConfigCollectorConsumerInterceptor<>();
 
     @Benchmark
     public ProducerRecord<String, String> interceptEmptyOnSend() {
-        return interceptor.onSend(producerRecord);
+        return pInterceptor.onSend(producerRecord);
     }
 
     @Benchmark
     public ConsumerRecords interceptEmptyOnConsume() {
-        return interceptor.onConsume(consumerRecords);
+        return cInterceptor.onConsume(consumerRecords);
     }
 
     public static void main(String[] args) throws RunnerException {

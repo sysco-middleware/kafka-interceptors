@@ -23,38 +23,50 @@
  */
 package no.sysco.middleware.kafka.interceptor.config;
 
+import no.sysco.middleware.kafka.interceptor.config.proto.ClientConfig;
+import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
+
+import java.util.Map;
 
 /**
+ * Kafka interceptor for harvesting and storing Consumer user provided configs
  *
- * @author Sysco Middleware AS
+ * @author SYSCO Middleware
+ * @param <K>
+ * @param <V>
  */
-public class ConfigHarvesterInterceptorTest {
-    
-    public ConfigHarvesterInterceptorTest() {
+public class ConfigCollectorConsumerInterceptor<K, V> extends BaseConfigCollectorInterceptor implements ConsumerInterceptor<K, V> {
+
+    public ConfigCollectorConsumerInterceptor() {
+        super(ClientConfig.ClientType.CONSUMER);
     }
 
     /**
-     * Test of onSend method, of class ConfigHarvesterInterceptor.
+     * Not used as we need only catch configuration properties during app initialization
+     * Just return record unchanged
      */
-    @Test
-    public void testOnSend() {
-        ConfigHarvesterInterceptor instance = new ConfigHarvesterInterceptor();
-        ProducerRecord expResult = new ProducerRecord<>("test-topic", "test-key", "test-value");
-        ProducerRecord result = instance.onSend(expResult);
-        assertEquals(expResult, result);
+    @Override
+    public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
+        return records;
     }
 
     /**
-     * Test of onConsume method, of class ConfigHarvesterInterceptor.
+     * Not used as we need only catch configuration properties during app initialization
      */
-    @Test
-    public void testOnConsume() {
-        ConfigHarvesterInterceptor instance = new ConfigHarvesterInterceptor();
-        ConsumerRecords consumedRecords = instance.onConsume(ConsumerRecords.EMPTY);
-        assertEquals(consumedRecords, ConsumerRecords.empty());
+    @Override
+    public void onCommit(Map<TopicPartition, OffsetAndMetadata> offsets) {
+        //noop
     }
+
+    /**
+     * Not used as we need only catch configuration properties during app initialization
+     */
+    @Override
+    public void close() {
+        //noop
+    }
+
 }

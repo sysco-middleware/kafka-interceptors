@@ -5,8 +5,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import zipkin2.Span;
 
-import java.util.HashMap;
-
 import static org.junit.Assert.assertNotNull;
 
 public class TracingProducerInterceptorTest extends BaseTracingTest {
@@ -15,10 +13,8 @@ public class TracingProducerInterceptorTest extends BaseTracingTest {
 
   @Test
   public void shouldNotTouchRecords() {
-    final TracingProducerInterceptor<String, String> interceptor =
-        new TracingProducerInterceptor<>();
-    interceptor.configure(map
-    );
+    final TracingProducerInterceptor<String, String> interceptor = new TracingProducerInterceptor<>();
+    interceptor.configure(map);
     final ProducerRecord<String, String> tracedRecord = interceptor.onSend(record);
     Assert.assertEquals(record, tracedRecord);
   }
@@ -26,8 +22,7 @@ public class TracingProducerInterceptorTest extends BaseTracingTest {
   @Test
   public void shouldCreateSpanOnSend() {
     //Given
-    final TracingProducerInterceptor<String, String> interceptor =
-        new TracingProducerInterceptor<>();
+    final TracingProducerInterceptor<String, String> interceptor = new TracingProducerInterceptor<>();
     interceptor.configure(map);
     interceptor.tracing = tracing;
     //When

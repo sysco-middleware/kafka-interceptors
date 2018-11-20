@@ -23,16 +23,22 @@
  */
 package no.sysco.middleware.kafka.interceptor.config;
 
+import org.apache.kafka.common.config.SslConfigs;
+
+import java.util.Arrays;
+import java.util.List;
+
 /**
  *
  * @author Sysco Middleware AS
  */
-public class ConfigHarvesterInterceptorConfig {
+public class ConfigCollectorInterceptorConfig {
 
     /**
      * configurable property for this interceptor that may be used to override default target topic
      */
-    public static final String TOPIC_NAME = "config.harvester.topic";
-    static final String DEFAULT_TOPIC_NAME = "__client_configs";
-    
+    public static final String CONFIG_COLLECTOR_TOPIC_CONFIG = "config.harvester.topic";
+    public static final String CONFIG_COLLECTOR_TOPIC_DEFAULT = "__client_configs";
+    public static final List<String> CONFIG_COLLECTOR_BLACKLIST_DEFAULT =
+            Arrays.asList(SslConfigs.SSL_KEY_PASSWORD_CONFIG, SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG);
 }

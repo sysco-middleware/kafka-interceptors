@@ -5,7 +5,7 @@
 
     <groupId>no.sysco.middleware.kafka</groupId>
     <artifactId>kafka-interceptors</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.3.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>kafka-interceptors</name>
@@ -14,9 +14,9 @@
 
     <modules>
         <module>zipkin</module>
-        <module>config</module>
+        <module>config-collector</module>
         <module>benchmarks</module>
-      <module>examples</module>
+        <module>examples</module>
     </modules>
 
     <licenses>
@@ -41,7 +41,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <kafka.version>1.0.0</kafka.version>
+        <kafka.version>1.1.1</kafka.version>
     </properties>
 
     <dependencies>
@@ -49,6 +49,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.charithe</groupId>
+            <artifactId>kafka-junit</artifactId>
+            <version>4.1.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
