@@ -7,6 +7,8 @@ import brave.sampler.Sampler;
 import java.util.AbstractList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -38,13 +40,16 @@ abstract class BaseTracingInterceptor implements Configurable {
   public void configure(Map<String, ?> map) {
     groupId = extractString(map, ConsumerConfig.GROUP_ID_CONFIG);
     clientId = extractString(map, ProducerConfig.CLIENT_ID_CONFIG);
+    boolean traceId128bitEnabled = Optional.ofNullable(extractString(map, TracingInterceptorConfig.ZIPKIN_TRACE_ID_128BIT_ENABLED_CONFIG))
+                                            .map(Boolean::valueOf).orElse(TracingInterceptorConfig.ZIPKIN_TRACE_ID_128BIT_ENABLED_DEFAULT);
     final Reporter<Span> reporter = buildReporter(map);
     final String localServiceName = getLocalServiceName(map);
     final Float samplerRate = getSamplerRate(map);
     final Tracing.Builder tracingBuilder =
         Tracing.newBuilder()
             .localServiceName(localServiceName)
-            .sampler(Sampler.create(samplerRate));
+                .traceId128Bit(traceId128bitEnabled)
+                .sampler(Sampler.create(samplerRate));
     if (reporter != null) {
       tracingBuilder.spanReporter(reporter);
     }
@@ -136,14 +141,14 @@ abstract class BaseTracingInterceptor implements Configurable {
         final String kafkaBootstrapServers =
             extractString(map, CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
         if (Objects.nonNull(kafkaBootstrapServers)) {
-          sender = KafkaSender.create(kafkaBootstrapServers).toBuilder().build();
+          sender = KafkaSender.newBuilder().bootstrapServers(kafkaBootstrapServers).build();
           LOGGER.info("Zipkin Interceptor: Kafka sender created with Bootstrap servers: {}",
               kafkaBootstrapServers);
         } else {
           final String kafkaBootstrapServersList =
               extractList(map, CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
           if (kafkaBootstrapServersList != null) {
-            sender = KafkaSender.create(kafkaBootstrapServersList).toBuilder().build();
+            sender = KafkaSender.newBuilder().bootstrapServers(kafkaBootstrapServersList).build();
             LOGGER.info("Brave Interceptor: Kafka sender created with Bootstrap servers: {}",
                 kafkaBootstrapServersList);
           } else {
@@ -153,12 +158,12 @@ abstract class BaseTracingInterceptor implements Configurable {
           }
         }
       } else {
-        sender = KafkaSender.create(zipkinBootstrapServers).toBuilder().build();
+        sender = KafkaSender.newBuilder().bootstrapServers(zipkinBootstrapServers).build();
         LOGGER.info("Zipkin Interceptor: Kafka sender created with Bootstrap servers: {}",
             zipkinBootstrapServers);
       }
     } else {
-      sender = URLConnectionSender.create(zipkinApiUrl).toBuilder().build();
+      sender = URLConnectionSender.create(zipkinApiUrl);
       LOGGER.info("Zipkin Interceptor: URL connection sender created with URL: {}", zipkinApiUrl);
     }
     return sender;

@@ -5,7 +5,6 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import zipkin2.Endpoint;
 
 /**
  * Producer Interceptor to trace Records send to a Kafka Topic.
@@ -27,7 +26,7 @@ public class TracingProducerInterceptor<K, V> extends BaseTracingInterceptor imp
         span.tag(KafkaTagKey.KAFKA_KEY, record.key().toString());
       }
       if (remoteServiceName != null) {
-        span.remoteEndpoint(Endpoint.newBuilder().serviceName(remoteServiceName).build());
+        span.remoteServiceName(remoteServiceName);
       }
       span.tag(KafkaTagKey.KAFKA_TOPIC, record.topic())
           .tag(KafkaTagKey.KAFKA_CLIENT_ID, clientId)

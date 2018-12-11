@@ -2,15 +2,15 @@ package no.sysco.middleware.kafka.interceptor.zipkin;
 
 import brave.Span;
 import brave.propagation.TraceContextOrSamplingFlags;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
-import zipkin2.Endpoint;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Consumer Interceptor that creates spans when records are received from Consumer API.
@@ -55,7 +55,7 @@ public class TracingConsumerInterceptor<K, V> extends BaseTracingInterceptor imp
                 .tag(KafkaTagKey.KAFKA_CLIENT_ID, clientId)
                 .tag(KafkaTagKey.KAFKA_GROUP_ID, groupId);
             if (remoteServiceName != null) {
-              span.remoteEndpoint(Endpoint.newBuilder().serviceName(remoteServiceName).build());
+              span.remoteServiceName(remoteServiceName);
             }
             span.start().finish(); // span won't be shared by other records
           }
@@ -67,7 +67,7 @@ public class TracingConsumerInterceptor<K, V> extends BaseTracingInterceptor imp
     }
     consumerSpansForTopic.values().forEach(span -> {
       if (remoteServiceName != null) {
-        span.remoteEndpoint(Endpoint.newBuilder().serviceName(remoteServiceName).build());
+        span.remoteServiceName(remoteServiceName);
       }
       span.finish();
       LOGGER.debug("Consumer Record intercepted: {}", span.context());
